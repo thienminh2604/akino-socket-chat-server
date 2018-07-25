@@ -1,8 +1,7 @@
 const express = require('express')
 const router = express.Router()
+const User = require('../controllers/login')
 
-router.post('/', function(req, res) {
-	res.send({ msg: 'Hello' })
-})
+router.post('/', User.findOne)
 
 module.exports = router
