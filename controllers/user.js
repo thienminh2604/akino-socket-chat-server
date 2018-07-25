@@ -34,6 +34,7 @@ exports.create = async (req, res) => {
 
 exports.findAll = (req, res) => {
 	UserModel.find()
+		.sort({ _id: 1 })
 		.then(users => res.send(users))
 		.catch(err => {
 			console.log(err)
@@ -43,46 +44,77 @@ exports.findAll = (req, res) => {
 
 exports.findOne = (req, res) => {
 	UserModel.findById(req.params.id)
-		.then(user => res.send(user))
+		.then(user => {
+			if (!user) {
+				return res.status(404).send({
+					message: `Not found with id ${req.params.id}`,
+				})
+			}
+			return res.send(user)
+		})
 		.catch(err => {
-			console.log(err)
-			return res.status(500).send({ message: 'user not found' })
+			if (err.kind === 'ObjectId') {
+				return res.status(404).send({
+					message: `Not found with id ${req.params.id}`,
+				})
+			}
+			return res.status(500).send({ message: 'Error when finding!' })
 		})
 }
 
 exports.update = (req, res) => {
-	UserModel.findOneAndUpdate(
-		{ Username: req.body.Username },
-		{ $set: { Password: req.body.Password, Name: req.body.Name } },
-		{ new: true },
-		(err, user) => {
-			if (err) res.status(500).send({ message: 'Update false' })
-			else {
-				if (user === null) {
-					res.status(500).send({ message: 'User not found' })
-				} else res.send(user)
-			}
-		}
+	UserModel.findByIdAndUpdate(
+		req.body.id,
+		{
+			Password: req.body.Password,
+			Name: req.body.Name,
+			DOB: req.body.DOB,
+			Permission: req.body.Permission,
+		},
+		{ new: true }
 	)
+		.then(user => {
+			if (!user) {
+				return res.status(404).send({
+					message: `Not found with id ${req.params.id}`,
+				})
+			}
+
+			return res.send(user)
+		})
+		.catch(err => {
+			console.log(err)
+
+			if (err.kind === 'ObjectId') {
+				return res.status(404).send({
+					message: `Not found with id ${req.params.id}`,
+				})
+			}
+
+			return res.status(500).send({
+				message: 'Error when finding!',
+			})
+		})
 }
 
 exports.delete = (req, res) => {
-	UserModel.findOne({ Username: req.params.id }, (err, user) => {
-		if (err) res.status(500).send({ message: 'User not found' })
-		else {
-			if (user == null) {
-				res.status(400).send({ message: 'user not found' })
-			} else {
-				UserModel.deleteOne({ Username: req.params.id }, err => {
-					if (err)
-						res.status(400).send({
-							message: 'error when deleting this user',
-						})
-					else {
-						res.status(200).send({ message: 'Delete success' })
-					}
+	UserModel.findByIdAndRemove(req.params.id)
+		.then(result => {
+			if (!result) {
+				return res.status(404).send({
+					message: `Not found with id ${req.params.id}`,
 				})
 			}
-		}
-	})
+			return res.send({ message: 'Deleted successfully!' })
+		})
+		.catch(err => {
+			if (err.kind === 'ObjectId') {
+				return res.status(404).send({
+					message: `Not found with id ${req.params.id}`,
+				})
+			}
+			return res.status(500).send({
+				message: `Error when delete with id ${req.params.id}`,
+			})
+		})
 }
