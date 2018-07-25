@@ -11,8 +11,8 @@ const logger = require('morgan')
 const favicon = require('serve-favicon')
 
 const indexRouter = require('./routes/index')
-const login = require('./routes/login')
 const user = require('./routes/user')
+const login = require('./routes/login')
 
 const app = express()
 
@@ -28,8 +28,8 @@ app.use(cookieParser())
 app.use(express.static(path.join(__dirname + 'public')))
 
 app.use('/', indexRouter)
-app.use('/login', login)
 app.use('/api/users', user)
+app.use('/api/logins', login)
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
 	next(createError(404))
